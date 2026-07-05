@@ -67,6 +67,8 @@ class UIElement():
     absolutePosition: Vector2
 
     enabled = True
+    _disabledParent = False
+    visible = True
     parent = None
 
 
@@ -298,9 +300,21 @@ class Panel(UIElement):
 
     def render(self, surface):
         for elem in self.elements:
-            boundingBox = elem.update(surface)
+            if not elem.enabled: continue
             
-            if elem.enabled:
+            parent = elem.parent
+            parentEnabled = parent.enabled and not parent._disabledParent
+
+            if not parentEnabled:
+                elem._disabledParent = True
+            elif parentEnabled and elem._disabledParent:
+                elem._disabledParent = False
+
+            if elem._disabledParent: continue
+
+            ## Update and render
+            boundingBox = elem.update(surface)
+            if elem.visible:
                 elem.render(surface, boundingBox)
 
 
@@ -402,9 +416,6 @@ def test():
                     return exit()
 
         now = time()
-        # pos = textbutton1.position
-        # offset = sin(now)*20
-        # textbutton1.position = Udim2.fromOffset(sin(now)*20, cos(now)*20)
         
         ui_layer.render()
         
